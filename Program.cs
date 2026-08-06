@@ -302,6 +302,10 @@ namespace MantenimientoPC
                 {
                     try
                     {
+                        if ((File.GetAttributes(file) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                        {
+                            File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.ReadOnly);
+                        }
                         File.Delete(file);
                         filesDeleted++;
                     }
@@ -324,7 +328,7 @@ namespace MantenimientoPC
                 {
                     try
                     {
-                        Directory.Delete(dir, true);
+                        SafeDeleteDirectory(dir);
                         dirsDeleted++;
                     }
                     catch
@@ -356,7 +360,7 @@ namespace MantenimientoPC
         static void EmptyRecycleBin()
         {
             Log("Limpiando la Papelera de Reciclaje...");
-            RunSystemCommand("powershell.exe", "-NoProfile -Command \"Clear-RecycleBin -Force -ErrorAction SilentlyContinue\"");
+            RunSystemCommand("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -Command \"Clear-RecycleBin -Force -ErrorAction SilentlyContinue\"");
         }
 
         static int RunSystemCommand(string fileName, string arguments, bool suppressErrorDisplay = false)
@@ -472,13 +476,14 @@ namespace MantenimientoPC
         static void ShowHardwareInfo()
         {
             Console.WriteLine("\n--- INFORMACIÓN DE HARDWARE (VÍA POWERSHELL CIM) ---");
-            string cmd = "Write-Host ' Nombre de PC: ' -NoNewline; hostname; " +
-                         "Write-Host ' S.O.:         ' -NoNewline; (Get-CimInstance Win32_OperatingSystem).Caption; " +
-                         "Write-Host ' CPU:          ' -NoNewline; (Get-CimInstance Win32_Processor).Name; " +
-                         "Write-Host ' Memoria RAM:  ' -NoNewline; [Math]::Round((Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB, 2); Write-Host ' GB'; " +
-                         "Write-Host ' Disco C:      ' -NoNewline; $d=Get-CimInstance Win32_LogicalDisk -Filter 'DeviceID=''C:'''; [Math]::Round($d.FreeSpace / 1GB, 2); Write-Host ' GB libres de ' -NoNewline; [Math]::Round($d.Size / 1GB, 2); Write-Host ' GB';";
+            string cmd = "Write-Host (' Nombre de PC: ' + $env:COMPUTERNAME); " +
+                         "Write-Host (' S.O.:         ' + (Get-CimInstance Win32_OperatingSystem).Caption); " +
+                         "Write-Host (' CPU:          ' + (Get-CimInstance Win32_Processor).Name); " +
+                         "Write-Host (' Memoria RAM:  ' + [Math]::Round((Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize / 1MB, 2) + ' GB'); " +
+                         "$d = Get-CimInstance Win32_LogicalDisk -Filter 'DeviceID=''C:'''; " +
+                         "Write-Host (' Disco C:      ' + [Math]::Round($d.FreeSpace / 1GB, 2) + ' GB libres de ' + [Math]::Round($d.Size / 1GB, 2) + ' GB');";
             
-            RunSystemCommand("powershell.exe", "-NoProfile -Command \"" + cmd + "\"");
+            RunSystemCommand("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -Command \"" + cmd + "\"");
             Console.WriteLine("----------------------------------------------------\n");
         }
 
@@ -489,7 +494,7 @@ namespace MantenimientoPC
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = string.Format("-NoProfile -Command \"(Get-PhysicalDisk | Where-Object {{ `$PSItem.DeviceID -eq (Get-Partition -DriveLetter {0}).DiskNumber }}).MediaType\"", driveLetter),
+                    Arguments = string.Format("-NoProfile -ExecutionPolicy Bypass -Command \"(Get-PhysicalDisk | Where-Object {{ `$_.DeviceID -eq (Get-Partition -DriveLetter {0}).DiskNumber }}).MediaType\"", driveLetter),
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
@@ -519,6 +524,10 @@ namespace MantenimientoPC
                 {
                     try
                     {
+                        if ((File.GetAttributes(file) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                        {
+                            File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.ReadOnly);
+                        }
                         File.Delete(file);
                     }
                     catch { }
@@ -537,6 +546,47 @@ namespace MantenimientoPC
             CleanRecentFilesFilesOnly(Path.Combine(recentPath, "CustomDestinations"));
             
             Log("Historial de Archivos Recientes limpiado con éxito.");
+        }
+
+        static void SafeDeleteDirectory(string path)
+        {
+            if (!Directory.Exists(path)) return;
+            try
+            {
+                // Limpiar atributos de solo lectura en archivos internos
+                string[] files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
+                foreach (string file in files)
+                {
+                    try
+                    {
+                        if ((File.GetAttributes(file) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                        {
+                            File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.ReadOnly);
+                        }
+                    }
+                    catch { }
+                }
+                
+                // Limpiar atributos de solo lectura en directorios internos
+                string[] dirs = Directory.GetDirectories(path, "*", SearchOption.AllDirectories);
+                foreach (string dir in dirs)
+                {
+                    try
+                    {
+                        if ((File.GetAttributes(dir) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                        {
+                            File.SetAttributes(dir, File.GetAttributes(dir) & ~FileAttributes.ReadOnly);
+                        }
+                    }
+                    catch { }
+                }
+
+                Directory.Delete(path, true);
+            }
+            catch
+            {
+                try { Directory.Delete(path, true); } catch { }
+            }
         }
 
         static void ThreadSleep(int ms)

@@ -257,13 +257,23 @@ namespace MantenimientoPC
 
             string batteryReportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reporte_bateria.html");
             Log(string.Format("Generando reporte de batería en: '{0}'...", batteryReportPath));
-            RunSystemCommand("powercfg", string.Format("/batteryreport /output \"{0}\"", batteryReportPath));
+            
+            // Se silencia el error del reporte de batería si falla (típico en PCs de escritorio sin batería)
+            int exitCode = RunSystemCommand("powercfg", string.Format("/batteryreport /output \"{0}\"", batteryReportPath), true);
+            if (exitCode == 0)
+            {
+                Log("Reporte de batería generado exitosamente en: reporte_bateria.html");
+            }
+            else
+            {
+                Log("Nota: No se generó el reporte de batería (esto es normal en PC de escritorio sin batería).", false);
+            }
 
             string energyReportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reporte_energia.html");
             Log("Ejecutando análisis de eficiencia energética (duración: 60 segundos)...");
             RunSystemCommand("powercfg", string.Format("/energy /output \"{0}\"", energyReportPath));
 
-            Log("Reportes HTML generados exitosamente en la carpeta de la aplicación.");
+            Log("Reportes HTML procesados en la carpeta de la aplicación.");
             Log("Módulo de Diagnóstico finalizado.");
         }
 
@@ -349,8 +359,9 @@ namespace MantenimientoPC
             RunSystemCommand("powershell.exe", "-NoProfile -Command \"Clear-RecycleBin -Force -ErrorAction SilentlyContinue\"");
         }
 
-        static void RunSystemCommand(string fileName, string arguments)
+        static int RunSystemCommand(string fileName, string arguments, bool suppressErrorDisplay = false)
         {
+            int exitCode = -1;
             try
             {
                 ProcessStartInfo startInfo = new ProcessStartInfo
@@ -366,13 +377,14 @@ namespace MantenimientoPC
                     if (process != null)
                     {
                         process.WaitForExit();
-                        if (process.ExitCode != 0)
+                        exitCode = process.ExitCode;
+                        if (exitCode != 0 && !suppressErrorDisplay)
                         {
-                            Log(string.Format("El comando '{0} {1}' finalizó con código de salida no estándar: {2}", fileName, arguments, process.ExitCode), true);
+                            Log(string.Format("El comando '{0} {1}' finalizó con código de salida no estándar: {2}", fileName, arguments, exitCode), true);
                             
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.WriteLine("\n [!] DIAGNÓSTICO DEL ERROR:");
-                            Console.WriteLine("     Detalle: " + GetExitCodeDescription(fileName, process.ExitCode));
+                            Console.WriteLine("     Detalle: " + GetExitCodeDescription(fileName, exitCode));
                             Console.ResetColor();
                         }
                     }
@@ -380,32 +392,37 @@ namespace MantenimientoPC
             }
             catch (Exception ex)
             {
-                Log(string.Format("Fallo al ejecutar el comando '{0} {1}': {2}", fileName, arguments, ex.Message), true);
-                
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\n [!] DIAGNÓSTICO DEL ERROR:");
-                if (ex is System.ComponentModel.Win32Exception)
+                exitCode = -2;
+                if (!suppressErrorDisplay)
                 {
-                    var win32Ex = ex as System.ComponentModel.Win32Exception;
-                    if (win32Ex.NativeErrorCode == 2) // File not found
+                    Log(string.Format("Fallo al ejecutar el comando '{0} {1}': {2}", fileName, arguments, ex.Message), true);
+                    
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\n [!] DIAGNÓSTICO DEL ERROR:");
+                    if (ex is System.ComponentModel.Win32Exception)
                     {
-                        Console.WriteLine("     Causa: El archivo ejecutable '" + fileName + "' no se encuentra en el sistema o en las rutas PATH.");
-                    }
-                    else if (win32Ex.NativeErrorCode == 5) // Access Denied
-                    {
-                        Console.WriteLine("     Causa: Acceso denegado. Asegúrese de que el programa tenga privilegios elevados de Administrador.");
+                        var win32Ex = ex as System.ComponentModel.Win32Exception;
+                        if (win32Ex.NativeErrorCode == 2) // File not found
+                        {
+                            Console.WriteLine("     Causa: El archivo ejecutable '" + fileName + "' no se encuentra en el sistema o en las rutas PATH.");
+                        }
+                        else if (win32Ex.NativeErrorCode == 5) // Access Denied
+                        {
+                            Console.WriteLine("     Causa: Acceso denegado. Asegúrese de que el programa tenga privilegios elevados de Administrador.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("     Causa (Error de Windows " + win32Ex.NativeErrorCode + "): " + win32Ex.Message);
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("     Causa (Error de Windows " + win32Ex.NativeErrorCode + "): " + win32Ex.Message);
+                        Console.WriteLine("     Causa: " + ex.Message);
                     }
+                    Console.ResetColor();
                 }
-                else
-                {
-                    Console.WriteLine("     Causa: " + ex.Message);
-                }
-                Console.ResetColor();
             }
+            return exitCode;
         }
 
         static string GetExitCodeDescription(string programName, int exitCode)
@@ -459,7 +476,7 @@ namespace MantenimientoPC
                          "Write-Host ' S.O.:         ' -NoNewline; (Get-CimInstance Win32_OperatingSystem).Caption; " +
                          "Write-Host ' CPU:          ' -NoNewline; (Get-CimInstance Win32_Processor).Name; " +
                          "Write-Host ' Memoria RAM:  ' -NoNewline; [Math]::Round((Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB, 2); Write-Host ' GB'; " +
-                         "Write-Host ' Disco C:      ' -NoNewline; $d=Get-CimInstance Win32_LogicalDisk -Filter 'DeviceID=\"C:\"'; [Math]::Round($d.FreeSpace / 1GB, 2); Write-Host ' GB libres de ' -NoNewline; [Math]::Round($d.Size / 1GB, 2); Write-Host ' GB';";
+                         "Write-Host ' Disco C:      ' -NoNewline; $d=Get-CimInstance Win32_LogicalDisk -Filter 'DeviceID=''C:'''; [Math]::Round($d.FreeSpace / 1GB, 2); Write-Host ' GB libres de ' -NoNewline; [Math]::Round($d.Size / 1GB, 2); Write-Host ' GB';";
             
             RunSystemCommand("powershell.exe", "-NoProfile -Command \"" + cmd + "\"");
             Console.WriteLine("----------------------------------------------------\n");

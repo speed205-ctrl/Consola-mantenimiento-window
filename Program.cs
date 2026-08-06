@@ -78,14 +78,27 @@ namespace MantenimientoPC
 
         static void DrawMenu()
         {
-            Console.ForegroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(" [1] Limpieza de Archivos Temporales y Caché");
+            
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(" [2] Integridad y Reparación del Sistema (SFC & DISM)");
+            
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(" [3] Optimización y Desfragmentación de Disco (C:)");
+            
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(" [4] Optimización y Restablecimiento de Red (IP / DNS)");
+            
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(" [5] Diagnóstico de Energía e Información de Hardware");
+            
+            Console.ForegroundColor = ConsoleColor.Cyan; // Destacado para el Mantenimiento Completo
             Console.WriteLine(" [6] EJECUTAR TODO EL MANTENIMIENTO (Completo y Automático)");
+            
+            Console.ForegroundColor = ConsoleColor.DarkGray; // Color más suave para salir
             Console.WriteLine(" [7] Salir");
+            
             Console.ResetColor();
         }
 

@@ -32,11 +32,11 @@ namespace MantenimientoPC
                 DrawMenu();
                 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("\n Seleccione una opción (1-7): ");
+                Console.Write("\n Seleccione una opción (1-4): ");
                 Console.ResetColor();
                 string choice = Console.ReadLine();
 
-                if (choice == "7")
+                if (choice == "4")
                 {
                     Log("Aplicación de mantenimiento cerrada por el usuario.");
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -79,25 +79,35 @@ namespace MantenimientoPC
         static void DrawMenu()
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(" [1] Limpieza de Archivos Temporales y Caché");
-            
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(" [2] Integridad y Reparación del Sistema (SFC & DISM)");
-            
+            Console.WriteLine(" [1] MANTENIMIENTO RÁPIDO / LIGERO");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("     -> Limpia archivos temporales de Windows, caché de navegadores (Chrome/Edge),");
+            Console.WriteLine("        historial de archivos recientes, vacía la papelera de reciclaje, limpia la");
+            Console.WriteLine("        caché DNS y ejecuta optimización de discos (TRIM en SSD / Defrag en HDD).");
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(" [3] Optimización y Desfragmentación de Disco (C:)");
-            
+            Console.WriteLine("        (Proceso rápido, seguro y sin interrupciones de red).");
+            Console.WriteLine();
+
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(" [4] Optimización y Restablecimiento de Red (IP / DNS)");
-            
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(" [5] Diagnóstico de Energía e Información de Hardware");
-            
-            Console.ForegroundColor = ConsoleColor.Cyan; // Destacado para el Mantenimiento Completo
-            Console.WriteLine(" [6] EJECUTAR TODO EL MANTENIMIENTO (Completo y Automático)");
-            
-            Console.ForegroundColor = ConsoleColor.DarkGray; // Color más suave para salir
-            Console.WriteLine(" [7] Salir");
+            Console.WriteLine(" [2] MANTENIMIENTO COMPLETO / PROFUNDO");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("     -> Ejecuta la limpieza completa del mantenimiento ligero más un escaneo profundo");
+            Console.WriteLine("        de integridad de archivos del sistema (SFC/DISM), comprobación de disco en");
+            Console.WriteLine("        línea (Chkdsk /scan), restablecimiento de red (Winsock y pila TCP/IP), y");
+            Console.WriteLine("        reportes detallados de salud de batería y eficiencia energética.");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("        (Tarda varios minutos, renueva conexión IP y se aconseja reiniciar al terminar).");
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(" [3] Ejecutar Tareas Individuales (Modo Avanzado)");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("     -> Permite seleccionar y ejecutar de forma independiente cada uno de los");
+            Console.WriteLine("        5 módulos de mantenimiento del sistema.");
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine(" [4] Salir");
             
             Console.ResetColor();
         }
@@ -133,28 +143,13 @@ namespace MantenimientoPC
             switch (choice)
             {
                 case "1":
-                    RunLimpieza();
+                    RunMantenimientoLigero();
                     break;
                 case "2":
-                    RunIntegridad();
+                    RunMantenimientoProfundo();
                     break;
                 case "3":
-                    RunOptimizacionDisco();
-                    break;
-                case "4":
-                    RunOptimizacionRed();
-                    break;
-                case "5":
-                    RunDiagnosticoEnergia();
-                    break;
-                case "6":
-                    Log("Iniciando Mantenimiento Completo Automatizado...");
-                    RunLimpieza();
-                    RunIntegridad();
-                    RunOptimizacionDisco();
-                    RunOptimizacionRed();
-                    RunDiagnosticoEnergia();
-                    Log("¡Mantenimiento Completo Automatizado Finalizado con Éxito!");
+                    ShowSubmenuLoop();
                     break;
                 default:
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -190,6 +185,9 @@ namespace MantenimientoPC
 
             // 6. Archivos Recientes
             CleanRecentFiles();
+
+            // 7. Caché de Navegadores (Chrome / Edge)
+            CleanBrowserCaches();
 
             Log("Módulo de Limpieza finalizado.");
         }
@@ -604,6 +602,115 @@ namespace MantenimientoPC
             {
                 try { Directory.Delete(path, true); } catch { }
             }
+        }
+
+        static void RunMantenimientoLigero()
+        {
+            Log("=== INICIANDO MANTENIMIENTO RÁPIDO / LIGERO ===");
+            RunLimpieza();
+            RunOptimizacionDisco(); // TRIM/Defrag inteligente (muy rápido en SSD)
+            
+            Log("Vaciando caché DNS de red...");
+            RunSystemCommand("ipconfig", "/flushdns");
+
+            Log("=== ¡MANTENIMIENTO RÁPIDO / LIGERO FINALIZADO CON ÉXITO! ===");
+        }
+
+        static void RunMantenimientoProfundo()
+        {
+            Log("=== INICIANDO MANTENIMIENTO COMPLETO / PROFUNDO ===");
+            RunLimpieza();
+            RunIntegridad();
+            RunOptimizacionDisco();
+            RunOptimizacionRed();
+            RunDiagnosticoEnergia();
+            Log("=== ¡MANTENIMIENTO COMPLETO / PROFUNDO FINALIZADO CON ÉXITO! ===");
+        }
+
+        static void ShowSubmenuLoop()
+        {
+            while (true)
+            {
+                Console.Clear();
+                DrawHeader();
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(" ========================================================");
+                Console.WriteLine("   MODO AVANZADO: TAREAS DE MANTENIMIENTO INDIVIDUALES");
+                Console.WriteLine(" ========================================================");
+                Console.WriteLine();
+                
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(" [1] Limpieza de Archivos Temporales, Caché y Papelera");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(" [2] Integridad y Reparación del Sistema (SFC, DISM y Chkdsk)");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(" [3] Optimización y Desfragmentación de Disco (C:)");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(" [4] Optimización y Restablecimiento de Red (IP / DNS / Sockets)");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(" [5] Diagnóstico de Energía e Información de Hardware");
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine(" [6] Volver al Menú Principal");
+                Console.ResetColor();
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\n Seleccione un módulo a ejecutar (1-6): ");
+                Console.ResetColor();
+                string choice = Console.ReadLine();
+
+                if (choice == "6") break;
+
+                Console.Clear();
+                DrawHeader();
+
+                switch (choice)
+                {
+                    case "1":
+                        RunLimpieza();
+                        break;
+                    case "2":
+                        RunIntegridad();
+                        break;
+                    case "3":
+                        RunOptimizacionDisco();
+                        break;
+                    case "4":
+                        RunOptimizacionRed();
+                        break;
+                    case "5":
+                        RunDiagnosticoEnergia();
+                        break;
+                    default:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(" [!] Opción no válida. Intente de nuevo.");
+                        Console.ResetColor();
+                        break;
+                }
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("\n Presione cualquier tecla para volver al menú avanzado...");
+                Console.ResetColor();
+                Console.ReadKey();
+            }
+        }
+
+        static void CleanBrowserCaches()
+        {
+            Log("Limpiando caché de navegadores Chrome y Edge...");
+
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+            // Google Chrome
+            string chromeCache = Path.Combine(localAppData, "Google\\Chrome\\User Data\\Default\\Cache");
+            string chromeCodeCache = Path.Combine(localAppData, "Google\\Chrome\\User Data\\Default\\Code Cache");
+            CleanDirectory(chromeCache, "Caché de Google Chrome");
+            CleanDirectory(chromeCodeCache, "Caché de Código de Google Chrome");
+
+            // Microsoft Edge
+            string edgeCache = Path.Combine(localAppData, "Microsoft\\Edge\\User Data\\Default\\Cache");
+            string edgeCodeCache = Path.Combine(localAppData, "Microsoft\\Edge\\User Data\\Default\\Code Cache");
+            CleanDirectory(edgeCache, "Caché de Microsoft Edge");
+            CleanDirectory(edgeCodeCache, "Caché de Código de Microsoft Edge");
         }
 
         static void ThreadSleep(int ms)

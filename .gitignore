@@ -1,0 +1,5 @@
+# Ignorar archivos de reporte locales y logs
+mantenimiento_log.txt
+reporte_bateria.html
+reporte_energia.html
+*.log

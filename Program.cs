@@ -32,11 +32,11 @@ namespace MantenimientoPC
                 DrawMenu();
                 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("\n Seleccione una opción (1-4): ");
+                Console.Write("\n Seleccione una opción (1-5): ");
                 Console.ResetColor();
                 string choice = Console.ReadLine();
 
-                if (choice == "4")
+                if (choice == "5")
                 {
                     Log("Aplicación de mantenimiento cerrada por el usuario.");
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -99,15 +99,25 @@ namespace MantenimientoPC
             Console.WriteLine("        (Tarda varios minutos, renueva conexión IP y se aconseja reiniciar al terminar).");
             Console.WriteLine();
 
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(" [3] MANTENIMIENTO DE REDES Y CONECTIVIDAD");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("     -> Optimiza y repara la conexión a internet. Vacía la caché DNS, renueva tu IP,");
+            Console.WriteLine("        restablece los sockets (Winsock) y la pila TCP/IP, y realiza pruebas de");
+            Console.WriteLine("        conectividad (Ping y resolución DNS) para verificar el estado de la red.");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("        (Interrumpe la conexión unos segundos y se aconseja reiniciar).");
+            Console.WriteLine();
+
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(" [3] Ejecutar Tareas Individuales (Modo Avanzado)");
+            Console.WriteLine(" [4] Ejecutar Tareas Individuales (Modo Avanzado)");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("     -> Permite seleccionar y ejecutar de forma independiente cada uno de los");
             Console.WriteLine("        5 módulos de mantenimiento del sistema.");
             Console.WriteLine();
 
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine(" [4] Salir");
+            Console.WriteLine(" [5] Salir");
             
             Console.ResetColor();
         }
@@ -149,6 +159,9 @@ namespace MantenimientoPC
                     RunMantenimientoProfundo();
                     break;
                 case "3":
+                    RunMantenimientoRedes();
+                    break;
+                case "4":
                     ShowSubmenuLoop();
                     break;
                 default:
@@ -602,6 +615,21 @@ namespace MantenimientoPC
             {
                 try { Directory.Delete(path, true); } catch { }
             }
+        }
+
+        static void RunMantenimientoRedes()
+        {
+            Log("=== INICIANDO MANTENIMIENTO DE REDES Y CONECTIVIDAD ===");
+            RunOptimizacionRed();
+            
+            Log("Realizando pruebas de conectividad de red...");
+            Console.WriteLine("\n--- PRUEBA 1: PING A GOOGLE DNS (8.8.8.8) ---");
+            RunSystemCommand("ping", "8.8.8.8 -n 4");
+
+            Console.WriteLine("\n--- PRUEBA 2: RESOLUCIÓN DE NOMBRES DNS (google.com) ---");
+            RunSystemCommand("nslookup", "google.com");
+            
+            Log("=== ¡MANTENIMIENTO DE REDES Y CONECTIVIDAD FINALIZADO! ===");
         }
 
         static void RunMantenimientoLigero()

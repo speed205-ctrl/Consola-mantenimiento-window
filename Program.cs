@@ -248,16 +248,20 @@ namespace MantenimientoPC
             RunSystemCommand("ipconfig", "/flushdns");
 
             Log("Liberación de dirección IP...");
-            RunSystemCommand("ipconfig", "/release");
+            RunSystemCommand("ipconfig", "/release", true);
 
             Log("Renovación de dirección IP...");
-            RunSystemCommand("ipconfig", "/renew");
+            RunSystemCommand("ipconfig", "/renew", true);
 
             Log("Restableciendo el catálogo Winsock (Sockets de Red)...");
             RunSystemCommand("netsh", "winsock reset");
 
             Log("Restableciendo el protocolo TCP/IP...");
-            RunSystemCommand("netsh", "int ip reset");
+            int exitCode = RunSystemCommand("netsh", "int ip reset", true);
+            if (exitCode == 0 || exitCode == 1)
+            {
+                Log("Protocolo TCP/IP restablecido. (Nota: Es normal ver un mensaje de 'Acceso denegado' en Windows 10/11).");
+            }
 
             Log("Módulo de Red finalizado. (Nota: Se aconseja reiniciar el equipo).");
         }

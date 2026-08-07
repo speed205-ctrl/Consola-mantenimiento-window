@@ -740,25 +740,29 @@ namespace MantenimientoPC
                 Console.WriteLine();
                 
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(" [1] Módulo 1: Limpieza de Temporales, Caché (Chrome/Edge) y Papelera");
+                Console.WriteLine(" [1] Módulo 1: Limpieza de Temporales, Caché (Chrome/Edge), WER y Event Logs");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(" [2] Módulo 2: Integridad y Reparación del Sistema (SFC, DISM y Chkdsk)");
+                Console.WriteLine(" [2] Módulo 2: Integridad y Reparación del Sistema (SFC, DISM, WinSxS y Chkdsk)");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(" [3] Módulo 3: Optimización y Desfragmentación Inteligente de Disco (C:)");
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine(" [4] Módulo 4: Optimización y Restablecimiento de Red (IP / DNS / Sockets)");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(" [5] Módulo 5: Diagnóstico de Energía e Información de Hardware");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(" [6] Crear Punto de Restauración del Sistema");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(" [7] Ver Registro de Mantenimiento (mantenimiento_log.txt)");
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine(" [6] Volver al Menú Principal");
+                Console.WriteLine(" [8] Volver al Menú Principal");
                 Console.ResetColor();
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("\n Seleccione un módulo a ejecutar (1-6): ");
+                Console.Write("\n Seleccione una opción (1-8): ");
                 Console.ResetColor();
                 string choice = Console.ReadLine();
 
-                if (choice == "6") break;
+                if (choice == "8") break;
 
                 Console.Clear();
                 DrawHeader();
@@ -779,6 +783,12 @@ namespace MantenimientoPC
                         break;
                     case "5":
                         RunDiagnosticoEnergia();
+                        break;
+                    case "6":
+                        CreateSystemRestorePoint();
+                        break;
+                    case "7":
+                        OpenLogFile();
                         break;
                     default:
                         Console.ForegroundColor = ConsoleColor.Red;
@@ -871,6 +881,42 @@ namespace MantenimientoPC
             else
             {
                 Log("No se pudieron vaciar algunos registros de eventos de Windows.", true);
+            }
+        }
+
+        static void CreateSystemRestorePoint()
+        {
+            Log("=== CREANDO PUNTO DE RESTAURACIÓN DEL SISTEMA ===");
+            Log("Creando punto de restauración 'MantenimientoPC_Batman'...");
+            
+            int exitCode = RunSystemCommand("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -Command \"Checkpoint-Computer -Description 'MantenimientoPC_Batman' -RestorePointType 'APPLICATION_INSTALL'\"", true);
+            if (exitCode == 0)
+            {
+                Log("¡Punto de restauración creado con éxito!");
+            }
+            else
+            {
+                Log("No se pudo crear el punto de restauración. (Nota: Es posible que la Protección del Sistema esté desactivada en C: o que se haya creado uno recientemente en las últimas 24h).", true);
+            }
+        }
+
+        static void OpenLogFile()
+        {
+            Log("Abriendo archivo de registro de mantenimientos...");
+            try
+            {
+                if (File.Exists(logFilePath))
+                {
+                    Process.Start("notepad.exe", string.Format("\"{0}\"", logFilePath));
+                }
+                else
+                {
+                    Log("El archivo de registro aún no se ha generado.", true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("No se pudo abrir el archivo de log: " + ex.Message, true);
             }
         }
 

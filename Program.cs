@@ -64,14 +64,25 @@ namespace MantenimientoPC
 
         static void DrawHeader()
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(@"      _/\_             _/\_      ");
+            Console.WriteLine(@"     /    \_         _/    \     ");
+            Console.WriteLine(@"    /       \_______/       \    ");
+            Console.WriteLine(@"   /  /\                 /\  \   ");
+            Console.WriteLine(@"  |  /  \               /  \  |  ");
+            Console.WriteLine(@"  | |    \             /    | |  ");
+            Console.WriteLine(@"  | |     \   _   _   /     | |  ");
+            Console.WriteLine(@"  \  \     \_/ \_/ \_/     /  /  ");
+            Console.WriteLine(@"   \  \                   /  /   ");
+            Console.WriteLine(@"    \  \____         ____/  /    ");
+            Console.WriteLine(@"     \      \_______/      /     ");
+            Console.WriteLine(@"      \____           ____/      ");
+            Console.WriteLine(@"           \___   ___/           ");
+            Console.WriteLine(@"               \_/               ");
+            
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(@"  __  __         _  _              _            _      ");
-            Console.WriteLine(@" |  \/  |__ _ _ _| |_ ___ _ _  _  (_)_ __  _ __| |__ _ ");
-            Console.WriteLine(@" | |\/| / _` | ' \  _/ -_) ' \| | | | '  \| '_ \ / _` |");
-            Console.WriteLine(@" |_|  |_\__,_|_||_\__\___|_||_|_| |_|_|_|_| .__/_\__,_|");
-            Console.WriteLine(@"                                          |_|          ");
             Console.WriteLine(" ========================================================");
-            Console.WriteLine("   Mantenimiento de PC con Comandos Nativos de Windows");
+            Console.WriteLine("   SISTEMA DE MANTENIMIENTO PC - BATMAN UTILITY v2.0");
             Console.WriteLine(" ========================================================");
             Console.ResetColor();
         }
@@ -172,6 +183,15 @@ namespace MantenimientoPC
             // 7. Caché de Navegadores (Chrome / Edge)
             CleanBrowserCaches();
 
+            // 8. Reportes de Error de Windows (WER) y CrashDumps
+            CleanWindowsErrorReporting();
+
+            // 9. Caché de Optimización de Entrega de Windows (Update Delivery)
+            CleanDeliveryOptimization();
+
+            // 10. Registros de Eventos de Windows (Event Logs)
+            CleanEventLogs();
+
             Log("Módulo de Limpieza finalizado.");
         }
 
@@ -184,6 +204,9 @@ namespace MantenimientoPC
 
             Log("Ejecutando DISM (Deployment Image Servicing and Management)...");
             RunSystemCommand("dism", "/Online /Cleanup-Image /RestoreHealth");
+
+            Log("Ejecutando limpieza del almacén de componentes (WinSxS)...");
+            RunSystemCommand("dism", "/Online /Cleanup-Image /StartComponentCleanup");
 
             Log("Ejecutando Comprobación de Disco en línea (Chkdsk /scan)...");
             RunSystemCommand("chkdsk", "C: /scan");
@@ -788,6 +811,67 @@ namespace MantenimientoPC
             string edgeCodeCache = Path.Combine(localAppData, "Microsoft\\Edge\\User Data\\Default\\Code Cache");
             CleanDirectory(edgeCache, "Caché de Microsoft Edge");
             CleanDirectory(edgeCodeCache, "Caché de Código de Microsoft Edge");
+        }
+
+        static void CleanWindowsErrorReporting()
+        {
+            Log("Limpiando reportes de error de Windows (WER) y volcados de memoria...");
+            
+            // 1. WER en ProgramData
+            string programDataWerArchive = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Microsoft\\Windows\\WER\\ReportArchive");
+            string programDataWerQueue = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Microsoft\\Windows\\WER\\ReportQueue");
+            CleanDirectory(programDataWerArchive, "Reportes de Error (ProgramData Archivo)");
+            CleanDirectory(programDataWerQueue, "Reportes de Error (ProgramData Cola)");
+
+            // 2. WER en LocalAppData
+            string localWerArchive = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Windows\\WER\\ReportArchive");
+            string localWerQueue = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Windows\\WER\\ReportQueue");
+            CleanDirectory(localWerArchive, "Reportes de Error (Usuario Archivo)");
+            CleanDirectory(localWerQueue, "Reportes de Error (Usuario Cola)");
+
+            // 3. CrashDumps en LocalAppData
+            string localCrashDumps = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CrashDumps");
+            CleanDirectory(localCrashDumps, "Volcados de Bloqueo de Aplicaciones (CrashDumps)");
+
+            // 4. Minidumps del Sistema
+            string systemMinidump = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Minidump");
+            CleanDirectory(systemMinidump, "Volcados de Sistema (Minidump)");
+
+            // 5. MEMORY.DMP
+            string memoryDmp = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "MEMORY.DMP");
+            if (File.Exists(memoryDmp))
+            {
+                try
+                {
+                    File.SetAttributes(memoryDmp, FileAttributes.Normal);
+                    File.Delete(memoryDmp);
+                    Log("Archivo de volcado de memoria completa (MEMORY.DMP) eliminado.");
+                }
+                catch (Exception e)
+                {
+                    Log("No se pudo eliminar MEMORY.DMP: " + e.Message, true);
+                }
+            }
+        }
+
+        static void CleanDeliveryOptimization()
+        {
+            Log("Limpiando la caché de Optimización de Entrega de Windows (Update Delivery)...");
+            RunSystemCommand("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -Command \"Delete-DeliveryOptimizationCache -Force\"", true);
+        }
+
+        static void CleanEventLogs()
+        {
+            Log("Vaciando el historial de eventos de Windows (Event Logs)...");
+            int exitCode = RunSystemCommand("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -Command \"wevtutil el | ForEach-Object { wevtutil cl $_ }\"", true);
+            if (exitCode == 0)
+            {
+                Log("Todos los registros de eventos de Windows han sido vaciados.");
+            }
+            else
+            {
+                Log("No se pudieron vaciar algunos registros de eventos de Windows.", true);
+            }
         }
 
         static void ThreadSleep(int ms)

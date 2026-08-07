@@ -32,11 +32,11 @@ namespace MantenimientoPC
                 DrawMenu();
                 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("\n Seleccione una opción (1-5): ");
+                Console.Write("\n Seleccione una opción (1-3): ");
                 Console.ResetColor();
                 string choice = Console.ReadLine();
 
-                if (choice == "5")
+                if (choice == "3")
                 {
                     Log("Aplicación de mantenimiento cerrada por el usuario.");
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -79,45 +79,21 @@ namespace MantenimientoPC
         static void DrawMenu()
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(" [1] MANTENIMIENTO RÁPIDO / LIGERO");
+            Console.WriteLine(" [1] MANTENIMIENTO GENERAL AUTOMATIZADO");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("     -> Limpia archivos temporales de Windows, caché de navegadores (Chrome/Edge),");
-            Console.WriteLine("        historial de archivos recientes, vacía la papelera de reciclaje, limpia la");
-            Console.WriteLine("        caché DNS y ejecuta optimización de discos (TRIM en SSD / Defrag en HDD).");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("        (Proceso rápido, seguro y sin interrupciones de red).");
+            Console.WriteLine("     -> Ejecuta flujos automatizados: Mantenimiento Rápido/Ligero,");
+            Console.WriteLine("        Mantenimiento Completo/Profundo o Mantenimiento de Redes.");
             Console.WriteLine();
 
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(" [2] MANTENIMIENTO COMPLETO / PROFUNDO");
+            Console.WriteLine(" [2] MODO ESPECIALIZADO (TAREAS INDIVIDUALES)");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("     -> Ejecuta la limpieza completa del mantenimiento ligero más un escaneo profundo");
-            Console.WriteLine("        de integridad de archivos del sistema (SFC/DISM), comprobación de disco en");
-            Console.WriteLine("        línea (Chkdsk /scan), restablecimiento de red (Winsock y pila TCP/IP), y");
-            Console.WriteLine("        reportes detallados de salud de batería y eficiencia energética.");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("        (Tarda varios minutos, renueva conexión IP y se aconseja reiniciar al terminar).");
-            Console.WriteLine();
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(" [3] MANTENIMIENTO DE REDES Y CONECTIVIDAD");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("     -> Optimiza y repara la conexión a internet. Vacía la caché DNS, renueva tu IP,");
-            Console.WriteLine("        restablece los sockets (Winsock) y la pila TCP/IP, y realiza pruebas de");
-            Console.WriteLine("        conectividad (Ping y resolución DNS) para verificar el estado de la red.");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("        (Interrumpe la conexión unos segundos y se aconseja reiniciar).");
-            Console.WriteLine();
-
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(" [4] Ejecutar Tareas Individuales (Modo Avanzado)");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("     -> Permite seleccionar y ejecutar de forma independiente cada uno de los");
-            Console.WriteLine("        5 módulos de mantenimiento del sistema.");
+            Console.WriteLine("     -> Permite ejecutar de forma independiente cada comando o módulo");
+            Console.WriteLine("        de mantenimiento por separado (SFC, DISM, limpieza, red, etc.).");
             Console.WriteLine();
 
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine(" [5] Salir");
+            Console.WriteLine(" [3] Salir");
             
             Console.ResetColor();
         }
@@ -153,16 +129,10 @@ namespace MantenimientoPC
             switch (choice)
             {
                 case "1":
-                    RunMantenimientoLigero();
+                    ShowGeneralMaintenanceMenuLoop();
                     break;
                 case "2":
-                    RunMantenimientoProfundo();
-                    break;
-                case "3":
-                    RunMantenimientoRedes();
-                    break;
-                case "4":
-                    ShowSubmenuLoop();
+                    ShowSpecializedModeMenuLoop();
                     break;
                 default:
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -655,7 +625,7 @@ namespace MantenimientoPC
             Log("=== ¡MANTENIMIENTO COMPLETO / PROFUNDO FINALIZADO CON ÉXITO! ===");
         }
 
-        static void ShowSubmenuLoop()
+        static void ShowGeneralMaintenanceMenuLoop()
         {
             while (true)
             {
@@ -663,20 +633,99 @@ namespace MantenimientoPC
                 DrawHeader();
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine(" ========================================================");
-                Console.WriteLine("   MODO AVANZADO: TAREAS DE MANTENIMIENTO INDIVIDUALES");
+                Console.WriteLine("   MANTENIMIENTO GENERAL AUTOMATIZADO");
                 Console.WriteLine(" ========================================================");
                 Console.WriteLine();
                 
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(" [1] Limpieza de Archivos Temporales, Caché y Papelera");
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(" [2] Integridad y Reparación del Sistema (SFC, DISM y Chkdsk)");
+                Console.WriteLine(" [1] Mantenimiento Rápido / Ligero");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("     -> Limpia archivos temporales de Windows, caché de navegadores (Chrome/Edge),");
+                Console.WriteLine("        archivos recientes, vacía la papelera, limpia la caché DNS y ejecuta TRIM.");
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(" [3] Optimización y Desfragmentación de Disco (C:)");
+                Console.WriteLine("        (Proceso rápido, seguro y sin interrupciones de red).");
+                Console.WriteLine();
+                
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(" [4] Optimización y Restablecimiento de Red (IP / DNS / Sockets)");
+                Console.WriteLine(" [2] Mantenimiento Completo / Profundo");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("     -> Ejecuta la limpieza completa ligera, más el escaneo profundo de sistema");
+                Console.WriteLine("        (SFC/DISM), comprobación de disco (Chkdsk /scan), red completa y reportes.");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("        (Tarda varios minutos, renueva conexión IP y se aconseja reiniciar).");
+                Console.WriteLine();
+                
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(" [5] Diagnóstico de Energía e Información de Hardware");
+                Console.WriteLine(" [3] Mantenimiento de Redes y Conectividad");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("     -> Optimiza y repara la conexión a internet. Vacía la caché DNS, renueva IP,");
+                Console.WriteLine("        restablece los sockets (Winsock) y la pila TCP/IP, y realiza pruebas de");
+                Console.WriteLine("        conectividad (Ping y resolución DNS) para verificar la red.");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("        (Interrumpe la conexión unos segundos y se aconseja reiniciar).");
+                Console.WriteLine();
+                
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine(" [4] Volver al Menú Principal");
+                Console.ResetColor();
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\n Seleccione una opción (1-4): ");
+                Console.ResetColor();
+                string choice = Console.ReadLine();
+
+                if (choice == "4") break;
+
+                Console.Clear();
+                DrawHeader();
+
+                switch (choice)
+                {
+                    case "1":
+                        RunMantenimientoLigero();
+                        break;
+                    case "2":
+                        RunMantenimientoProfundo();
+                        break;
+                    case "3":
+                        RunMantenimientoRedes();
+                        break;
+                    default:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(" [!] Opción no válida. Intente de nuevo.");
+                        Console.ResetColor();
+                        break;
+                }
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("\n Presione cualquier tecla para volver al menú general...");
+                Console.ResetColor();
+                Console.ReadKey();
+            }
+        }
+
+        static void ShowSpecializedModeMenuLoop()
+        {
+            while (true)
+            {
+                Console.Clear();
+                DrawHeader();
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(" ========================================================");
+                Console.WriteLine("   MODO ESPECIALIZADO: TAREAS INDIVIDUALES");
+                Console.WriteLine(" ========================================================");
+                Console.WriteLine();
+                
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(" [1] Módulo 1: Limpieza de Temporales, Caché (Chrome/Edge) y Papelera");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(" [2] Módulo 2: Integridad y Reparación del Sistema (SFC, DISM y Chkdsk)");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(" [3] Módulo 3: Optimización y Desfragmentación Inteligente de Disco (C:)");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(" [4] Módulo 4: Optimización y Restablecimiento de Red (IP / DNS / Sockets)");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(" [5] Módulo 5: Diagnóstico de Energía e Información de Hardware");
                 Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.WriteLine(" [6] Volver al Menú Principal");
                 Console.ResetColor();
@@ -716,7 +765,7 @@ namespace MantenimientoPC
                 }
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("\n Presione cualquier tecla para volver al menú avanzado...");
+                Console.WriteLine("\n Presione cualquier tecla para volver al menú especializado...");
                 Console.ResetColor();
                 Console.ReadKey();
             }
